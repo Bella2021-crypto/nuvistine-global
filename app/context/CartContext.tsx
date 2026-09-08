@@ -20,6 +20,7 @@ export type CartItem = {
 
 type CartContextType = {
   cart: CartItem[];
+  isCartLoaded: boolean;
   addToCart: (item: Omit<CartItem, "quantity">, quantity?: number) => void;
   removeFromCart: (id: number, size?: string) => void;
   updateQuantity: (
@@ -38,24 +39,32 @@ const CartContext = createContext<CartContextType | undefined>(
 
 export function CartProvider({ children }: { children: ReactNode }) {
   const [cart, setCart] = useState<CartItem[]>([]);
+  const [isCartLoaded, setIsCartLoaded] = useState(false);
 
   // Load cart from browser storage
-  useEffect(() => {
-    const savedCart = localStorage.getItem("nuvistine-cart");
+ useEffect(() => {
+  const savedCart = localStorage.getItem("nuvistine-cart");
 
-    if (savedCart) {
-      try {
-        setCart(JSON.parse(savedCart));
-      } catch {
-        localStorage.removeItem("nuvistine-cart");
-      }
+  if (savedCart) {
+    try {
+      setCart(JSON.parse(savedCart));
+    } catch {
+      localStorage.removeItem("nuvistine-cart");
     }
-  }, []);
+  }
+
+  setIsCartLoaded(true);
+}, []);
 
   // Save cart whenever it changes
-  useEffect(() => {
-    localStorage.setItem("nuvistine-cart", JSON.stringify(cart));
-  }, [cart]);
+  
+useEffect(() => {
+  if (!isCartLoaded) {
+    return;
+  }
+
+  localStorage.setItem("nuvistine-cart", JSON.stringify(cart));
+}, [cart, isCartLoaded]);
 
   function addToCart(
     item: Omit<CartItem, "quantity">,
@@ -133,16 +142,18 @@ export function CartProvider({ children }: { children: ReactNode }) {
 
   return (
     <CartContext.Provider
-      value={{
-        cart,
-        addToCart,
-        removeFromCart,
-        updateQuantity,
-        clearCart,
-        cartCount,
-        cartTotal,
-      }}
-    >
+  value={{
+    cart,
+    addToCart,
+    removeFromCart,
+    updateQuantity,
+    clearCart,
+    cartCount,
+    cartTotal,
+    isCartLoaded,
+  }}
+>
+    
       {children}
     </CartContext.Provider>
   );

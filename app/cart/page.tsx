@@ -214,11 +214,12 @@ export default function CartPage() {
           </div>
         </div>
 
-        <button
-          className="mt-8 w-full bg-[#C9A227] py-5 text-xs tracking-[0.2em] text-white transition hover:bg-[#A98216]"
-        >
-          PROCEED TO CHECKOUT
-        </button>
+        <Link
+  href="/checkout"
+  className="mt-8 block w-full bg-[#C9A227] py-5 text-center text-xs tracking-[0.2em] text-white transition hover:bg-[#A98216]"
+>
+  PROCEED TO CHECKOUT
+</Link>
 
         <Link
           href="/shop"

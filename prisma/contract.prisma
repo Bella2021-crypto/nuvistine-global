@@ -1,0 +1,17 @@
+// use prisma-next
+
+model Order {
+  id        Int      @id @default(autoincrement())
+  reference String   @unique
+  email     String
+  fullName  String
+  phone     String
+  address   String
+  city      String
+  state     String
+  amount    Int
+  status    String
+  createdAt DateTime @default(now())
+
+  @@map("orders")
+}

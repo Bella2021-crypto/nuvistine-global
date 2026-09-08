@@ -71,7 +71,32 @@ export default function CheckoutPage() {
           </h1>
         </div>
 
-        <div className="grid gap-12 lg:grid-cols-[1fr_400px]">
+        <form
+          onSubmit={(event) => {
+  event.preventDefault();
+
+  const form = event.currentTarget;
+
+  const formData = new FormData(form);
+
+  const checkoutData = {
+    fullName: formData.get("fullName"),
+    email: formData.get("email"),
+    phone: formData.get("phone"),
+    address: formData.get("address"),
+    city: formData.get("city"),
+    state: formData.get("state"),
+  };
+
+  sessionStorage.setItem(
+    "nuvistine-checkout",
+    JSON.stringify(checkoutData),
+  );
+
+  window.location.href = "/payment";
+}}
+          className="grid gap-12 lg:grid-cols-[1fr_400px]"
+        >
           {/* Customer Information */}
           <div>
             <h2 className="font-serif text-2xl">
@@ -86,7 +111,10 @@ export default function CheckoutPage() {
 
                 <input
                   type="text"
+                  name="fullName"
                   placeholder="Your full name"
+                  required
+                  minLength={2}
                   className="w-full border border-[#201C17]/20 bg-transparent px-4 py-4 text-sm outline-none focus:border-[#C9A227]"
                 />
               </div>
@@ -98,7 +126,9 @@ export default function CheckoutPage() {
 
                 <input
                   type="email"
+                  name="email"
                   placeholder="you@example.com"
+                  required
                   className="w-full border border-[#201C17]/20 bg-transparent px-4 py-4 text-sm outline-none focus:border-[#C9A227]"
                 />
               </div>
@@ -110,7 +140,10 @@ export default function CheckoutPage() {
 
                 <input
                   type="tel"
+                  name="phone"
                   placeholder="0800 000 0000"
+                  required
+                  minLength={7}
                   className="w-full border border-[#201C17]/20 bg-transparent px-4 py-4 text-sm outline-none focus:border-[#C9A227]"
                 />
               </div>
@@ -129,7 +162,10 @@ export default function CheckoutPage() {
 
                 <input
                   type="text"
+                  name="address"
                   placeholder="Street address"
+                  required
+                  minLength={5}
                   className="w-full border border-[#201C17]/20 bg-transparent px-4 py-4 text-sm outline-none focus:border-[#C9A227]"
                 />
               </div>
@@ -142,7 +178,9 @@ export default function CheckoutPage() {
 
                   <input
                     type="text"
+                    name="city"
                     placeholder="Lagos"
+                    required
                     className="w-full border border-[#201C17]/20 bg-transparent px-4 py-4 text-sm outline-none focus:border-[#C9A227]"
                   />
                 </div>
@@ -154,7 +192,9 @@ export default function CheckoutPage() {
 
                   <input
                     type="text"
+                    name="state"
                     placeholder="Lagos State"
+                    required
                     className="w-full border border-[#201C17]/20 bg-transparent px-4 py-4 text-sm outline-none focus:border-[#C9A227]"
                   />
                 </div>
@@ -219,7 +259,7 @@ export default function CheckoutPage() {
               </div>
 
               <div className="mt-5 border-t border-[#201C17]/10 pt-5">
-                <div className="flex justify-between text-lg">
+                <div className="flex justify-between text-lg font-medium">
                   <span>Total</span>
                   <span>₦{cartTotal.toLocaleString()}</span>
                 </div>
@@ -227,12 +267,18 @@ export default function CheckoutPage() {
             </div>
 
             <button
+              type="submit"
               className="mt-8 w-full bg-[#C9A227] py-5 text-xs tracking-[0.2em] text-white transition hover:bg-[#A98216]"
             >
               CONTINUE TO PAYMENT
             </button>
+
+            <p className="mt-4 text-center text-[11px] leading-5 text-[#766D61]">
+              Your information is required to process and deliver your
+              order.
+            </p>
           </aside>
-        </div>
+        </form>
       </section>
     </main>
   );
