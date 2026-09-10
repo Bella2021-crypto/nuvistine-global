@@ -10,8 +10,35 @@ model Order {
   city      String
   state     String
   amount    Int
-  status    String
+  status         String
+deliveryStatus String @default("processing")
   createdAt DateTime @default(now())
 
   @@map("orders")
+}
+
+model OrderItem {
+  id        Int      @id @default(autoincrement())
+  orderId   Int
+  productId Int
+  name      String
+  price     Int
+  quantity  Int
+  size      String?
+
+  @@map("order_items")
+}
+
+model Product {
+  id          Int      @id @default(autoincrement())
+  name        String
+  category    String
+  description String
+  price       Int
+  image       String
+  stock       Int      @default(0)
+  sizes       String?
+  isActive    Boolean  @default(true)
+
+  @@map("products")
 }

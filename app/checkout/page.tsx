@@ -80,20 +80,25 @@ export default function CheckoutPage() {
   const formData = new FormData(form);
 
   const checkoutData = {
-    fullName: formData.get("fullName"),
-    email: formData.get("email"),
-    phone: formData.get("phone"),
-    address: formData.get("address"),
-    city: formData.get("city"),
-    state: formData.get("state"),
-  };
+  fullName: formData.get("fullName"),
+  email: formData.get("email"),
+  phone: formData.get("phone"),
+  address: formData.get("address"),
+  city: formData.get("city"),
+  state: formData.get("state"),
+};
 
-  sessionStorage.setItem(
-    "nuvistine-checkout",
-    JSON.stringify(checkoutData),
-  );
+sessionStorage.setItem(
+  "nuvistine-checkout",
+  JSON.stringify(checkoutData),
+);
 
-  window.location.href = "/payment";
+sessionStorage.setItem(
+  "nuvistine-customer-email",
+  String(checkoutData.email),
+);
+
+window.location.href = "/payment";
 }}
           className="grid gap-12 lg:grid-cols-[1fr_400px]"
         >

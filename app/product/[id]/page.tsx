@@ -1,171 +1,76 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import Link from "next/link";
 import { useCart } from "../../context/CartContext";
 
-const products = [
-  {
-    id: 1,
-    name: "The Classic Edit",
-    category: "Fashion",
-    price: 45000,
-    image:
-      "https://images.unsplash.com/photo-1483985988355-763728e1935b?auto=format&fit=crop&w=1200&q=85",
-    description:
-      "A timeless wardrobe essential designed for effortless elegance. The Classic Edit combines sophisticated style with everyday versatility.",
-    sizes: ["XS", "S", "M", "L", "XL"],
-  },
-  {
-    id: 2,
-    name: "Silk Evening Dress",
-    category: "Fashion",
-    price: 68000,
-    image:
-      "https://images.unsplash.com/photo-1566174053879-31528523f8ae?auto=format&fit=crop&w=1200&q=85",
-    description:
-      "An elegant evening silhouette crafted for special occasions. Refined, feminine and effortlessly sophisticated.",
-    sizes: ["XS", "S", "M", "L", "XL"],
-  },
-  {
-    id: 3,
-    name: "Signature Shoulder Bag",
-    category: "Bags & Accessories",
-    price: 38000,
-    image:
-      "https://images.unsplash.com/photo-1584917865442-de89df76afd3?auto=format&fit=crop&w=1200&q=85",
-    description:
-      "A polished everyday shoulder bag that adds a refined finishing touch to any outfit.",
-    sizes: [],
-  },
-  {
-    id: 4,
-    name: "Classic Leather Bag",
-    category: "Bags & Accessories",
-    price: 55000,
-    image:
-      "https://images.unsplash.com/photo-1594223274512-ad4803739b7c?auto=format&fit=crop&w=1200&q=85",
-    description:
-      "A structured classic designed for women who appreciate understated luxury and timeless accessories.",
-    sizes: [],
-  },
-  {
-    id: 5,
-    name: "The Golden Heel",
-    category: "Shoes",
-    price: 52000,
-    image:
-      "https://images.unsplash.com/photo-1543163521-1bf539c55dd2?auto=format&fit=crop&w=1200&q=85",
-    description:
-      "A statement heel designed to elevate your occasionwear with a touch of modern glamour.",
-    sizes: ["36", "37", "38", "39", "40", "41"],
-  },
-  {
-    id: 6,
-    name: "Everyday Sandals",
-    category: "Shoes",
-    price: 32000,
-    image:
-      "https://images.unsplash.com/photo-1603487742131-4160ec999306?auto=format&fit=crop&w=1200&q=85",
-    description:
-      "Comfortable, versatile sandals made for effortless everyday styling.",
-    sizes: ["36", "37", "38", "39", "40", "41"],
-  },
-  {
-    id: 7,
-    name: "Beauty Essentials",
-    category: "Beauty",
-    price: 28000,
-    image:
-      "https://images.unsplash.com/photo-1556229010-6c3f2c9ca5f8?auto=format&fit=crop&w=1200&q=85",
-    description:
-      "A carefully selected collection of beauty essentials designed to simplify your daily routine.",
-    sizes: [],
-  },
-  {
-    id: 8,
-    name: "Radiance Skincare Set",
-    category: "Beauty",
-    price: 42000,
-    image:
-      "https://images.unsplash.com/photo-1611930022073-b7a4ba5fcccd?auto=format&fit=crop&w=1200&q=85",
-    description:
-      "A nourishing skincare collection created to leave your skin feeling fresh, hydrated and radiant.",
-    sizes: [],
-  },
-  {
-    id: 9,
-    name: "Elegant Mini Dress",
-    category: "Fashion",
-    price: 51000,
-    image:
-      "https://images.unsplash.com/photo-1515886657613-9f3515b0c78f?auto=format&fit=crop&w=1200&q=85",
-    description:
-      "A sophisticated mini dress with a flattering silhouette, perfect for dinner dates and special occasions.",
-    sizes: ["XS", "S", "M", "L", "XL"],
-  },
-  {
-    id: 10,
-    name: "Gold Statement Earrings",
-    category: "Bags & Accessories",
-    price: 12000,
-    image:
-      "https://images.unsplash.com/photo-1535632066927-ab7c9ab60908?auto=format&fit=crop&w=1200&q=85",
-    description:
-      "Elegant statement earrings designed to bring a subtle touch of glamour to your look.",
-    sizes: [],
-  },
-  {
-    id: 11,
-    name: "Luxury Heels",
-    category: "Shoes",
-    price: 62000,
-    image:
-      "https://images.unsplash.com/photo-1595950653106-6c9ebd614d3a?auto=format&fit=crop&w=1200&q=85",
-    description:
-      "Sophisticated heels designed to make an unforgettable impression.",
-    sizes: ["36", "37", "38", "39", "40", "41"],
-  },
-  {
-    id: 12,
-    name: "Self-Care Collection",
-    category: "Beauty",
-    price: 35000,
-    image:
-      "https://images.unsplash.com/photo-1608571423902-eed4a5ad8108?auto=format&fit=crop&w=1200&q=85",
-    description:
-      "A thoughtful self-care collection for creating moments of calm, comfort and indulgence.",
-    sizes: [],
-  },
-];
-
-const formatPrice = (price: number) =>
-  `₦${price.toLocaleString("en-NG")}`;
+function formatPrice(price: number) {
+  return `₦${price.toLocaleString("en-NG")}`;
+}
 
 export default function ProductPage({
   params,
 }: {
   params: Promise<{ id: string }>;
 }) {
-      const { addToCart, cartCount } = useCart();
-  const [addedToCart, setAddedToCart] = useState(false);
+  const { addToCart, cartCount } = useCart();
+
+  const [product, setProduct] = useState<any | null>(null);
+  const [productLoading, setProductLoading] = useState(true);
   const [productId, setProductId] = useState<number | null>(null);
+  const [addedToCart, setAddedToCart] = useState(false);
   const [quantity, setQuantity] = useState(1);
   const [selectedSize, setSelectedSize] = useState("");
   const [isWishlisted, setIsWishlisted] = useState(false);
 
-  useState(() => {
+  useEffect(() => {
     params.then((value) => {
       setProductId(Number(value.id));
     });
-  });
+  }, [params]);
 
-  const product = products.find((item) => item.id === productId);
+  useEffect(() => {
+    if (!productId) return;
 
-  if (!productId) {
+    fetch("/api/products")
+      .then((response) => response.json())
+      .then((data) => {
+        const foundProduct = (data.products || []).find(
+          (item: any) => item.id === productId,
+        );
+
+        setProduct(foundProduct || null);
+        setProductLoading(false);
+      })
+      .catch(() => {
+        setProductLoading(false);
+      });
+  }, [productId]);
+
+  const productSizes =
+    typeof product?.sizes === "string" && product.sizes.trim()
+      ? product.sizes
+          .split(",")
+          .map((size: string) => size.trim())
+          .filter(Boolean)
+      : [];
+
+  const decreaseQuantity = () => {
+    setQuantity((current) => Math.max(1, current - 1));
+  };
+
+  const increaseQuantity = () => {
+  setQuantity((current) =>
+    Math.min(Number(product?.stock || 0), current + 1),
+  );
+};
+
+  if (productLoading || !productId) {
     return (
       <main className="min-h-screen bg-[#F8F3E7] flex items-center justify-center">
-        <p className="text-[#201C17]">Loading...</p>
+        <p className="text-[#201C17] tracking-[0.15em] text-sm">
+          LOADING PRODUCT...
+        </p>
       </main>
     );
   }
@@ -191,14 +96,6 @@ export default function ProductPage({
     );
   }
 
-  const decreaseQuantity = () => {
-    setQuantity((current) => Math.max(1, current - 1));
-  };
-
-  const increaseQuantity = () => {
-    setQuantity((current) => current + 1);
-  };
-
   return (
     <main className="min-h-screen bg-[#F8F3E7] text-[#201C17]">
       {/* Announcement Bar */}
@@ -217,24 +114,40 @@ export default function ProductPage({
           </Link>
 
           <nav className="hidden md:flex items-center gap-10 text-xs tracking-[0.18em]">
-            <Link href="/" className="hover:text-[#A98216] transition">
+            <Link
+              href="/"
+              className="hover:text-[#A98216] transition"
+            >
               HOME
             </Link>
+
             <Link href="/shop" className="text-[#A98216]">
               SHOP
             </Link>
-            <Link href="/#collections" className="hover:text-[#A98216] transition">
+
+            <Link
+              href="/#collections"
+              className="hover:text-[#A98216] transition"
+            >
               COLLECTIONS
             </Link>
-            <Link href="/#beauty" className="hover:text-[#A98216] transition">
+
+            <Link
+              href="/#beauty"
+              className="hover:text-[#A98216] transition"
+            >
               BEAUTY
             </Link>
-            <Link href="/#about" className="hover:text-[#A98216] transition">
+
+            <Link
+              href="/#about"
+              className="hover:text-[#A98216] transition"
+            >
               ABOUT
             </Link>
           </nav>
 
-                    <div className="flex items-center gap-5">
+          <div className="flex items-center gap-5">
             <button
               className="text-xl hover:text-[#A98216] transition"
               aria-label="Wishlist"
@@ -265,11 +178,15 @@ export default function ProductPage({
           <Link href="/" className="hover:text-[#A98216]">
             HOME
           </Link>
+
           <span className="mx-3">/</span>
+
           <Link href="/shop" className="hover:text-[#A98216]">
             SHOP
           </Link>
+
           <span className="mx-3">/</span>
+
           <span>{product.name.toUpperCase()}</span>
         </div>
       </div>
@@ -299,7 +216,7 @@ export default function ProductPage({
             </h1>
 
             <p className="text-2xl mb-8">
-              {formatPrice(product.price)}
+              {formatPrice(Number(product.price))}
             </p>
 
             <div className="w-full h-px bg-[#C9A227]/20 mb-8" />
@@ -309,7 +226,7 @@ export default function ProductPage({
             </p>
 
             {/* Size */}
-            {product.sizes.length > 0 && (
+            {productSizes.length > 0 && (
               <div className="mb-8">
                 <div className="flex justify-between mb-4">
                   <p className="text-xs tracking-[0.18em] uppercase">
@@ -322,7 +239,7 @@ export default function ProductPage({
                 </div>
 
                 <div className="flex flex-wrap gap-3">
-                  {product.sizes.map((size) => (
+                  {productSizes.map((size: string) => (
                     <button
                       key={size}
                       onClick={() => setSelectedSize(size)}
@@ -339,37 +256,57 @@ export default function ProductPage({
               </div>
             )}
 
-            {/* Quantity */}
-            <div className="mb-8">
-              <p className="text-xs tracking-[0.18em] uppercase mb-4">
-                Quantity
-              </p>
+         {/* Quantity */}
+<div className="mb-8">
+  <div className="mb-4 flex items-center justify-between gap-4">
+    <p className="text-xs tracking-[0.18em] uppercase">
+      Quantity
+    </p>
 
-              <div className="flex items-center border border-[#201C17]/20 w-fit">
-                <button
-                  onClick={decreaseQuantity}
-                  className="w-12 h-12 hover:bg-[#EFE5D0]"
-                >
-                  −
-                </button>
+    {Number(product.stock) === 0 ? (
+      <span className="text-xs tracking-widest text-red-600">
+        SOLD OUT
+      </span>
+    ) : Number(product.stock) <= 3 ? (
+      <span className="text-xs tracking-widest text-[#A98216]">
+        ONLY {product.stock} LEFT
+      </span>
+    ) : (
+      <span className="text-xs tracking-widest text-[#6B6258]">
+        {product.stock} IN STOCK
+      </span>
+    )}
+  </div>
 
-                <span className="w-12 text-center">{quantity}</span>
+  <div className="flex items-center border border-[#201C17]/20 w-fit">
+    <button
+      onClick={decreaseQuantity}
+      className="w-12 h-12 hover:bg-[#EFE5D0]"
+    >
+      −
+    </button>
 
-                <button
-                  onClick={increaseQuantity}
-                  className="w-12 h-12 hover:bg-[#EFE5D0]"
-                >
-                  +
-                </button>
-              </div>
-            </div>
+    <span className="w-12 text-center">{quantity}</span>
 
-            {/* Buttons */}
-            <div className="flex gap-3">
-              <button
+    <button
+      onClick={increaseQuantity}
+      className="w-12 h-12 hover:bg-[#EFE5D0]"
+    >
+      +
+    </button>
+  </div>
+</div>
+
+          {/* Buttons */}
+<div className="flex gap-3">
+ <button
   onClick={() => {
-    if (product.sizes.length > 0 && !selectedSize) {
-      alert("Please select a size before adding this item to your bag.");
+    if (Number(product.stock) === 0) {
+      return;
+    }
+
+    if (quantity > Number(product.stock)) {
+      alert("Sorry, there is not enough stock available.");
       return;
     }
 
@@ -378,7 +315,7 @@ export default function ProductPage({
         id: product.id,
         name: product.name,
         category: product.category,
-        price: product.price,
+        price: Number(product.price),
         image: product.image,
         size: selectedSize || undefined,
       },
@@ -391,9 +328,17 @@ export default function ProductPage({
       setAddedToCart(false);
     }, 2500);
   }}
-  className="flex-1 bg-[#C9A227] hover:bg-[#A98216] text-white py-5 text-xs tracking-[0.2em] uppercase transition"
+  className={`flex-1 bg-[#C9A227] hover:bg-[#A98216] text-white py-5 text-xs tracking-[0.2em] uppercase transition ${
+    Number(product.stock) === 0
+      ? "cursor-not-allowed opacity-50"
+      : ""
+  }`}
 >
-  {addedToCart ? "ADDED TO BAG ✓" : "ADD TO BAG"}
+  {Number(product.stock) === 0
+    ? "SOLD OUT"
+    : addedToCart
+      ? "ADDED TO BAG ✓"
+      : "ADD TO BAG"}
 </button>
 
               <button
@@ -414,6 +359,7 @@ export default function ProductPage({
                 <span className="text-xs tracking-[0.15em] uppercase">
                   Delivery
                 </span>
+
                 <span className="text-sm text-gray-500">
                   Available nationwide
                 </span>
@@ -423,6 +369,7 @@ export default function ProductPage({
                 <span className="text-xs tracking-[0.15em] uppercase">
                   Returns
                 </span>
+
                 <span className="text-sm text-gray-500">
                   Easy returns
                 </span>
@@ -432,6 +379,7 @@ export default function ProductPage({
                 <span className="text-xs tracking-[0.15em] uppercase">
                   Authenticity
                 </span>
+
                 <span className="text-sm text-gray-500">
                   Nuvistine quality guaranteed
                 </span>
@@ -493,12 +441,15 @@ export default function ProductPage({
               <Link href="/shop" className="block hover:text-white">
                 All Products
               </Link>
+
               <Link href="/shop" className="block hover:text-white">
                 Fashion
               </Link>
+
               <Link href="/shop" className="block hover:text-white">
                 Shoes
               </Link>
+
               <Link href="/shop" className="block hover:text-white">
                 Beauty
               </Link>

@@ -5,7 +5,7 @@ export async function POST(request: Request) {
   try {
     const body = await request.json();
 
-    const { email, amount } = body;
+   const { email, amount, items } = body;
 
     if (!email || !amount) {
       return NextResponse.json(
@@ -57,7 +57,7 @@ export async function POST(request: Request) {
 
     const reference = data.data.reference;
 
-await db.orm.public.Order.create({
+const order = await db.orm.public.Order.create({
   reference,
   email,
   fullName: body.customer?.fullName || "",
@@ -67,7 +67,21 @@ await db.orm.public.Order.create({
   state: body.customer?.state || "",
   amount: Math.round(Number(amount)),
   status: "pending",
+  deliveryStatus: "processing",
 });
+
+if (items && Array.isArray(items)) {
+  for (const item of items) {
+    await db.orm.public.OrderItem.create({
+      orderId: order.id,
+      productId: Number(item.id),
+      name: item.name,
+      price: Math.round(Number(item.price)),
+      quantity: Number(item.quantity),
+      size: item.size || null,
+    });
+  }
+}
 
 return NextResponse.json({
   authorization_url: data.data.authorization_url,

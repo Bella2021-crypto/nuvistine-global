@@ -64,7 +64,38 @@ const order = orders.find(
       );
     }
 
-    if (data.data.status === "success") {
+    if (data.data.status === "success" && order.status !== "paid") {
+  const orderItems = await db.orm.public.OrderItem.all();
+
+  const itemsForOrder = orderItems.filter(
+    (item) => item.orderId === order.id,
+  );
+
+  for (const item of itemsForOrder) {
+    const products = await db.orm.public.Product.all();
+
+    const product = products.find(
+      (product) => product.id === item.productId,
+    );
+
+    if (!product) {
+      continue;
+    }
+
+    const newStock = Math.max(
+      0,
+      Number(product.stock) - Number(item.quantity),
+    );
+
+    await db.orm.public.Product
+      .where({
+        id: product.id,
+      })
+      .update({
+        stock: newStock,
+      });
+  }
+
   await db.orm.public.Order
     .where({
       reference: data.data.reference,

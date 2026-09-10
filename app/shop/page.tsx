@@ -1,106 +1,8 @@
+
 "use client";
 
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import Link from "next/link";
-
-const products = [
-  {
-    id: 1,
-    name: "The Classic Edit",
-    category: "Fashion",
-    price: 45000,
-    image:
-      "https://images.unsplash.com/photo-1595777457583-95e059d581b8?auto=format&fit=crop&w=900&q=85",
-  },
-  {
-    id: 2,
-    name: "Silk Evening Dress",
-    category: "Fashion",
-    price: 68000,
-    image:
-      "https://images.unsplash.com/photo-1566174053879-31528523f8ae?auto=format&fit=crop&w=900&q=85",
-  },
-  {
-    id: 3,
-    name: "Signature Shoulder Bag",
-    category: "Bags & Accessories",
-    price: 38000,
-    image:
-      "https://images.unsplash.com/photo-1584917865442-de89df76afd3?auto=format&fit=crop&w=900&q=85",
-  },
-  {
-    id: 4,
-    name: "Classic Leather Bag",
-    category: "Bags & Accessories",
-    price: 55000,
-    image:
-      "https://images.unsplash.com/photo-1594223274512-ad4803739b7c?auto=format&fit=crop&w=900&q=85",
-  },
-  {
-    id: 5,
-    name: "The Golden Heel",
-    category: "Shoes",
-    price: 52000,
-    image:
-      "https://images.unsplash.com/photo-1543163521-1bf539c55dd2?auto=format&fit=crop&w=900&q=85",
-  },
-  {
-    id: 6,
-    name: "Everyday Sandals",
-    category: "Shoes",
-    price: 32000,
-    image:
-      "https://images.unsplash.com/photo-1603487742131-4160ec999306?auto=format&fit=crop&w=900&q=85",
-  },
-  {
-    id: 7,
-    name: "Beauty Essentials",
-    category: "Beauty",
-    price: 28000,
-    image:
-      "https://images.unsplash.com/photo-1596462502278-27bfdc403348?auto=format&fit=crop&w=900&q=85",
-  },
-  {
-    id: 8,
-    name: "Radiance Skincare Set",
-    category: "Beauty",
-    price: 42000,
-    image:
-      "https://images.unsplash.com/photo-1611930022073-b7a4ba5fcccd?auto=format&fit=crop&w=900&q=85",
-  },
-  {
-    id: 9,
-    name: "Elegant Mini Dress",
-    category: "Fashion",
-    price: 51000,
-    image:
-      "https://images.unsplash.com/photo-1515372039744-b8f02a3ae446?auto=format&fit=crop&w=900&q=85",
-  },
-  {
-    id: 10,
-    name: "Gold Statement Earrings",
-    category: "Bags & Accessories",
-    price: 12000,
-    image:
-      "https://images.unsplash.com/photo-1535632066927-ab7c9ab60908?auto=format&fit=crop&w=900&q=85",
-  },
-  {
-    id: 11,
-    name: "Luxury Heels",
-    category: "Shoes",
-    price: 62000,
-    image:
-      "https://images.unsplash.com/photo-1595950653106-6c9ebd614d3a?auto=format&fit=crop&w=900&q=85",
-  },
-  {
-    id: 12,
-    name: "Self-Care Collection",
-    category: "Beauty",
-    price: 35000,
-    image:
-      "https://images.unsplash.com/photo-1556228578-8c89e6adf883?auto=format&fit=crop&w=900&q=85",
-  },
-];
 
 const categories = [
   "All",
@@ -116,13 +18,28 @@ function formatPrice(price: number) {
 
 export default function ShopPage() {
   const [selectedCategory, setSelectedCategory] = useState("All");
+  const [products, setProducts] = useState<any[]>([]);
+  const [productsLoading, setProductsLoading] = useState(true);
   const [search, setSearch] = useState("");
   const [wishlist, setWishlist] = useState<number[]>([]);
+
+  useEffect(() => {
+    fetch("/api/products")
+      .then((response) => response.json())
+      .then((data) => {
+        setProducts(data.products || []);
+        setProductsLoading(false);
+      })
+      .catch(() => {
+        setProductsLoading(false);
+      });
+  }, []);
 
   const filteredProducts = useMemo(() => {
     return products.filter((product) => {
       const matchesCategory =
-        selectedCategory === "All" || product.category === selectedCategory;
+        selectedCategory === "All" ||
+        product.category === selectedCategory;
 
       const matchesSearch =
         product.name.toLowerCase().includes(search.toLowerCase()) ||
@@ -130,7 +47,7 @@ export default function ShopPage() {
 
       return matchesCategory && matchesSearch;
     });
-  }, [selectedCategory, search]);
+  }, [products, selectedCategory, search]);
 
   function toggleWishlist(id: number) {
     setWishlist((current) =>
@@ -251,8 +168,9 @@ export default function ShopPage() {
       <section className="mx-auto max-w-7xl px-6 pb-24 pt-8 lg:px-10">
         <div className="mb-8 flex items-center justify-between border-b border-[#201C17]/10 pb-5">
           <p className="text-xs tracking-[0.1em] text-[#766D61]">
-            {filteredProducts.length}{" "}
-            {filteredProducts.length === 1 ? "PRODUCT" : "PRODUCTS"}
+            {productsLoading ? "LOADING" : filteredProducts.length}{" "}
+            {!productsLoading &&
+              (filteredProducts.length === 1 ? "PRODUCT" : "PRODUCTS")}
           </p>
 
           <button className="text-xs tracking-[0.1em] hover:text-[#A98216]">
@@ -260,72 +178,80 @@ export default function ShopPage() {
           </button>
         </div>
 
-        {filteredProducts.length > 0 ? (
+        {productsLoading ? (
+          <div className="py-24 text-center">
+            <p className="text-sm tracking-widest text-[#766D61]">
+              LOADING PRODUCTS...
+            </p>
+          </div>
+        ) : filteredProducts.length > 0 ? (
           <div className="grid grid-cols-2 gap-x-4 gap-y-12 sm:grid-cols-3 lg:grid-cols-4 lg:gap-x-6">
-           {filteredProducts.map((product) => (
-  <article key={product.id} className="group">
-    <div className="relative aspect-[3/4] overflow-hidden bg-[#EFE5D0]">
-      {/* Clickable Product */}
-      <Link
-        href={`/product/${product.id}`}
-        className="block h-full w-full"
-      >
-        <img
-          src={product.image}
-          alt={product.name}
-          className="h-full w-full object-cover transition duration-700 group-hover:scale-105"
-        />
-      </Link>
+            {filteredProducts.map((product) => (
+              <article key={product.id} className="group">
+                <div className="relative aspect-[3/4] overflow-hidden bg-[#EFE5D0]">
+                  {/* Clickable Product */}
+                  <Link
+                    href={`/product/${product.id}`}
+                    className="block h-full w-full"
+                  >
+                    <img
+                      src={product.image}
+                      alt={product.name}
+                      className="h-full w-full object-cover transition duration-700 group-hover:scale-105"
+                    />
+                  </Link>
 
-      {/* Wishlist */}
-      <button
-        onClick={() => toggleWishlist(product.id)}
-        aria-label={`${
-          wishlist.includes(product.id)
-            ? "Remove from"
-            : "Add to"
-        } wishlist`}
-        className={`absolute right-3 top-3 z-10 flex h-9 w-9 items-center justify-center rounded-full bg-white/90 text-lg transition ${
-          wishlist.includes(product.id)
-            ? "text-[#A98216]"
-            : "text-[#201C17]"
-        }`}
-      >
-        {wishlist.includes(product.id) ? "♥" : "♡"}
-      </button>
+                  {/* Wishlist */}
+                  <button
+                    onClick={() => toggleWishlist(product.id)}
+                    aria-label={`${
+                      wishlist.includes(product.id)
+                        ? "Remove from"
+                        : "Add to"
+                    } wishlist`}
+                    className={`absolute right-3 top-3 z-10 flex h-9 w-9 items-center justify-center rounded-full bg-white/90 text-lg transition ${
+                      wishlist.includes(product.id)
+                        ? "text-[#A98216]"
+                        : "text-[#201C17]"
+                    }`}
+                  >
+                    {wishlist.includes(product.id) ? "♥" : "♡"}
+                  </button>
 
-      {/* Add to Bag */}
-      <Link
-        href={`/product/${product.id}`}
-        className="absolute bottom-0 left-0 right-0 z-10 translate-y-full bg-[#201C17] py-4 text-center text-[10px] tracking-[0.2em] text-white transition-transform duration-300 group-hover:translate-y-0"
-      >
-        VIEW PRODUCT
-      </Link>
-    </div>
+                  {/* View Product */}
+                  <Link
+                    href={`/product/${product.id}`}
+                    className="absolute bottom-0 left-0 right-0 z-10 translate-y-full bg-[#201C17] py-4 text-center text-[10px] tracking-[0.2em] text-white transition-transform duration-300 group-hover:translate-y-0"
+                  >
+                    VIEW PRODUCT
+                  </Link>
+                </div>
 
-    {/* Product Information */}
-    <Link
-      href={`/product/${product.id}`}
-      className="block pt-4"
-    >
-      <p className="text-[9px] tracking-[0.15em] text-[#8B806E]">
-        {product.category.toUpperCase()}
-      </p>
+                {/* Product Information */}
+                <Link
+                  href={`/product/${product.id}`}
+                  className="block pt-4"
+                >
+                  <p className="text-[9px] tracking-[0.15em] text-[#8B806E]">
+                    {product.category.toUpperCase()}
+                  </p>
 
-      <h2 className="mt-1 font-serif text-lg">
-        {product.name}
-      </h2>
+                  <h2 className="mt-1 font-serif text-lg">
+                    {product.name}
+                  </h2>
 
-      <p className="mt-2 text-sm">
-        {formatPrice(product.price)}
-      </p>
-    </Link>
-  </article>
-))}
+                  <p className="mt-2 text-sm">
+                    {formatPrice(product.price)}
+                  </p>
+                </Link>
+              </article>
+            ))}
           </div>
         ) : (
           <div className="py-24 text-center">
-            <h2 className="font-serif text-3xl">No products found</h2>
+            <h2 className="font-serif text-3xl">
+              No products found
+            </h2>
 
             <p className="mt-3 text-sm text-[#766D61]">
               Try another search or category.
@@ -350,7 +276,9 @@ export default function ShopPage() {
           STAY CONNECTED
         </p>
 
-        <h2 className="font-serif text-4xl">Join the Nuvistine World</h2>
+        <h2 className="font-serif text-4xl">
+          Join the Nuvistine World
+        </h2>
 
         <p className="mx-auto mt-4 max-w-lg text-sm text-[#766D61]">
           Get updates on new collections, exclusive offers and special
@@ -384,23 +312,27 @@ export default function ShopPage() {
               </div>
 
               <p className="mt-5 max-w-xs text-sm leading-6 text-white/60">
-                Curated fashion, beauty and lifestyle essentials for the modern
-                woman.
+                Curated fashion, beauty and lifestyle essentials for the
+                modern woman.
               </p>
             </div>
 
             <div>
               <h3 className="mb-4 text-xs tracking-[0.2em]">SHOP</h3>
+
               <div className="space-y-3 text-sm text-white/60">
                 <a href="/shop" className="block hover:text-white">
                   All Products
                 </a>
+
                 <a href="/shop" className="block hover:text-white">
                   Fashion
                 </a>
+
                 <a href="/shop" className="block hover:text-white">
                   Shoes
                 </a>
+
                 <a href="/shop" className="block hover:text-white">
                   Beauty
                 </a>
@@ -409,16 +341,20 @@ export default function ShopPage() {
 
             <div>
               <h3 className="mb-4 text-xs tracking-[0.2em]">HELP</h3>
+
               <div className="space-y-3 text-sm text-white/60">
                 <a href="#" className="block hover:text-white">
                   Contact
                 </a>
+
                 <a href="#" className="block hover:text-white">
                   Shipping
                 </a>
+
                 <a href="#" className="block hover:text-white">
                   Returns
                 </a>
+
                 <a href="#" className="block hover:text-white">
                   FAQ
                 </a>
@@ -427,13 +363,16 @@ export default function ShopPage() {
 
             <div>
               <h3 className="mb-4 text-xs tracking-[0.2em]">FOLLOW</h3>
+
               <div className="space-y-3 text-sm text-white/60">
                 <a href="#" className="block hover:text-white">
                   Instagram
                 </a>
+
                 <a href="#" className="block hover:text-white">
                   TikTok
                 </a>
+
                 <a href="#" className="block hover:text-white">
                   Facebook
                 </a>
