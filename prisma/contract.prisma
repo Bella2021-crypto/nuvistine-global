@@ -1,5 +1,15 @@
 // use prisma-next
 
+model Customer {
+  id        Int      @id @default(autoincrement())
+  name      String
+  email     String   @unique
+  password  String
+  createdAt DateTime @default(now())
+
+  @@map("customers")
+}
+
 model Order {
   id        Int      @id @default(autoincrement())
   reference String   @unique

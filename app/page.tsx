@@ -1,3 +1,8 @@
+"use client";
+
+import Link from "next/link";
+import { useCart } from "./context/CartContext";
+
 const categories = [
   {
     name: "Fashion",
@@ -57,6 +62,7 @@ const products = [
 ];
 
 export default function Home() {
+  const { cartCount } = useCart();
   return (
     <main className="min-h-screen bg-[#F8F3E7] text-[#201C17]">
       {/* Announcement Bar */}
@@ -109,10 +115,25 @@ export default function Home() {
             <button aria-label="Search" className="hidden sm:block">
               ⌕
             </button>
-            <button aria-label="Account" className="hidden sm:block">
-              ♡
-            </button>
-            <button aria-label="Shopping bag">♧</button>
+           <Link
+  href="/account"
+  aria-label="Account"
+  className="hidden sm:block transition hover:text-[#A98216]"
+>
+  ♡
+</Link>
+            <Link
+  href="/cart"
+  aria-label="Shopping bag"
+  className="transition hover:text-[#A98216]"
+>
+  ♧
+  {cartCount > 0 && (
+    <span className="ml-1 text-xs align-top">
+      ({cartCount})
+    </span>
+  )}
+</Link>
           </div>
         </div>
       </header>

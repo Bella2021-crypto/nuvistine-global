@@ -3,6 +3,7 @@
 
 import { useEffect, useMemo, useState } from "react";
 import Link from "next/link";
+import { useCart } from "../context/CartContext";
 
 const categories = [
   "All",
@@ -17,6 +18,7 @@ function formatPrice(price: number) {
 }
 
 export default function ShopPage() {
+  const { cartCount } = useCart();
   const [selectedCategory, setSelectedCategory] = useState("All");
   const [products, setProducts] = useState<any[]>([]);
   const [productsLoading, setProductsLoading] = useState(true);
