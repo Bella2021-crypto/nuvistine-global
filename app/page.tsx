@@ -2,6 +2,7 @@
 
 import Link from "next/link";
 import { useCart } from "./context/CartContext";
+import ThemeToggle from "./components/ThemeToggle";
 
 const categories = [
   {
@@ -64,14 +65,14 @@ const products = [
 export default function Home() {
   const { cartCount } = useCart();
   return (
-    <main className="min-h-screen bg-[#F8F3E7] text-[#201C17]">
+    <main className="min-h-screen bg-[var(--background)] text-[var(--foreground)]">
       {/* Announcement Bar */}
       <div className="bg-[#201C17] px-4 py-2 text-center text-[11px] tracking-[0.2em] text-[#F8F3E7]">
         FREE DELIVERY ON ORDERS OVER ₦100,000
       </div>
 
       {/* Navigation */}
-      <header className="border-b border-[#C9A227]/20 bg-[#F8F3E7]">
+      <header className="border-b border-[#C9A227]/20 bg-[var(--background)]">
         <div className="mx-auto flex h-20 max-w-7xl items-center justify-between px-6 lg:px-10">
           {/* Mobile Menu */}
           <button className="text-xl lg:hidden" aria-label="Open menu">
@@ -115,14 +116,15 @@ export default function Home() {
             <button aria-label="Search" className="hidden sm:block">
               ⌕
             </button>
-           <Link
+         <Link
   href="/account"
   aria-label="Account"
   className="hidden sm:block transition hover:text-[#A98216]"
 >
   ♡
 </Link>
-            <Link
+
+<Link
   href="/cart"
   aria-label="Shopping bag"
   className="transition hover:text-[#A98216]"
@@ -134,6 +136,9 @@ export default function Home() {
     </span>
   )}
 </Link>
+
+<ThemeToggle />
+
           </div>
         </div>
       </header>
@@ -215,7 +220,7 @@ export default function Home() {
       </section>
 
       {/* New Arrivals */}
-      <section id="shop" className="bg-[#EFE5D0] px-6 py-24 lg:px-10">
+      <section id="shop" className="bg-[var(--background)] px-6 py-24 lg:px-10">
         <div className="mx-auto max-w-7xl">
           <div className="mb-12 flex items-end justify-between">
             <div>
@@ -238,7 +243,7 @@ export default function Home() {
           <div className="grid grid-cols-2 gap-x-4 gap-y-10 lg:grid-cols-4 lg:gap-6">
             {products.map((product, index) => (
   <article key={product.name} className="group">
-    <div className="relative aspect-[3/4] overflow-hidden bg-white">
+    <div className="relative aspect-[3/4] overflow-hidden bg-[var(--card)]">
       
       {/* Clickable Product Image */}
       <a
@@ -255,7 +260,7 @@ export default function Home() {
       {/* Wishlist */}
       <button
         aria-label={`Add ${product.name} to wishlist`}
-        className="absolute right-4 top-4 z-10 flex h-9 w-9 items-center justify-center rounded-full bg-white/90 text-lg"
+        className="absolute right-4 top-4 z-10 flex h-9 w-9 items-center justify-center rounded-full bg-[var(--card)]/90 text-lg"
       >
         ♡
       </button>
@@ -263,7 +268,7 @@ export default function Home() {
       {/* View Product */}
       <a
         href={`/product/${index === 0 ? 1 : index === 1 ? 3 : index === 2 ? 5 : 7}`}
-        className="absolute bottom-0 left-0 right-0 z-10 translate-y-full bg-[#201C17] py-4 text-center text-[10px] tracking-[0.2em] text-white transition-transform duration-300 group-hover:translate-y-0"
+        className="absolute bottom-0 left-0 right-0 z-10 translate-y-full bg-[var(--foreground)] py-4 text-center text-[10px] tracking-[0.2em] text-[var(--background)] transition-transform duration-300 group-hover:translate-y-0"
       >
         VIEW PRODUCT
       </a>
@@ -274,7 +279,7 @@ export default function Home() {
       href={`/product/${index === 0 ? 1 : index === 1 ? 3 : index === 2 ? 5 : 7}`}
       className="block pt-4"
     >
-      <p className="text-[10px] tracking-[0.15em] text-[#8B806E]">
+      <p className="text-[10px] tracking-[0.15em] text-[var(--muted)]">
         {product.category.toUpperCase()}
       </p>
 
@@ -359,7 +364,7 @@ export default function Home() {
 
             <a
               href="/shop"
-              className="mt-8 inline-block bg-[#F8F3E7] px-9 py-4 text-xs tracking-[0.2em] text-[#201C17] transition hover:bg-[#C9A227] hover:text-white"
+              className="mt-8 inline-block bg-[var(--background)] px-9 py-4 text-xs tracking-[0.2em] text-[var(--foreground)] transition hover:bg-[#C9A227] hover:text-white"
             >
               SHOP BEAUTY
             </a>
@@ -368,7 +373,7 @@ export default function Home() {
       </section>
 
       {/* Why Nuvistine */}
-      <section id="about" className="mx-auto max-w-7xl px-6 py-24 lg:px-10">
+      <section id="about" className="mx-auto max-w-7xl px-6 py-20 lg:px-10">
         <div className="mb-14 text-center">
           <p className="mb-3 text-xs tracking-[0.35em] text-[#A98216]">
             THE NUVISTINE PROMISE
@@ -409,10 +414,12 @@ export default function Home() {
       </section>
 
       {/* Newsletter */}
-      <section className="bg-[#EFE5D0] px-6 py-24 text-center">
-        <p className="mb-4 text-xs tracking-[0.4em] text-[#A98216]">
-          STAY CONNECTED
-        </p>
+     <section className="bg-[var(--background)] px-6 py-16 text-center">
+  <div className="mx-auto mb-10 h-px w-16 bg-[#C9A227]" />
+
+  <p className="mb-4 text-xs tracking-[0.4em] text-[#A98216]">
+    STAY CONNECTED
+  </p>
 
         <h2 className="font-serif text-4xl sm:text-5xl">
           Join the Nuvistine World
@@ -427,11 +434,11 @@ export default function Home() {
           <input
             type="email"
             placeholder="Your email address"
-            className="flex-1 border border-[#C9A227]/40 bg-[#F8F3E7] px-5 py-4 text-sm outline-none placeholder:text-[#9A9184] focus:border-[#C9A227]"
+           className="flex-1 border border-[#C9A227]/40 bg-[var(--card)] px-5 py-4 text-sm text-[var(--foreground)] outline-none placeholder:text-[#9A9184] focus:border-[#C9A227]"
           />
-          <button className="bg-[#201C17] px-7 py-4 text-xs tracking-[0.2em] text-white transition hover:bg-[#A98216]">
-            JOIN
-          </button>
+          <button className="bg-[var(--foreground)] px-7 py-4 text-xs tracking-[0.2em] text-[var(--background)] transition hover:bg-[#C9A227] hover:text-white">
+  JOIN
+</button>
         </div>
       </section>
 

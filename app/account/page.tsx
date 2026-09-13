@@ -13,24 +13,36 @@ export default function AccountPage() {
   const [customer, setCustomer] = useState<Customer | null>(null);
   const [loading, setLoading] = useState(true);
 
-  useEffect(() => {
-    const savedCustomer = localStorage.getItem("nuvistine-customer");
+    useEffect(() => {
+    fetch("/api/auth/me")
+      .then(async (response) => {
+        if (!response.ok) {
+          window.location.href = "/login";
+          return;
+        }
 
-    if (savedCustomer) {
-      try {
-        setCustomer(JSON.parse(savedCustomer));
-      } catch {
-        localStorage.removeItem("nuvistine-customer");
-      }
-    }
-
-    setLoading(false);
+        const data = await response.json();
+        setCustomer(data.customer);
+      })
+      .catch(() => {
+        window.location.href = "/login";
+      })
+      .finally(() => {
+        setLoading(false);
+      });
   }, []);
 
-  function handleLogout() {
+  async function handleSignOut() {
+  try {
+    await fetch("/api/auth/logout", {
+      method: "POST",
+    });
+  } finally {
     localStorage.removeItem("nuvistine-customer");
+    sessionStorage.removeItem("nuvistine-customer-email");
     window.location.href = "/login";
   }
+}
 
   if (loading) {
     return (
@@ -90,7 +102,7 @@ export default function AccountPage() {
           </div>
 
           <button
-            onClick={handleLogout}
+            onClick={handleSignOut}
             className="border border-[#201C17] px-6 py-3 text-xs tracking-widest text-[#201C17] hover:bg-[#201C17] hover:text-white"
           >
             SIGN OUT

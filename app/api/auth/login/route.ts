@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import bcrypt from "bcryptjs";
 import { db } from "@/lib/db";
+import { createSession } from "@/lib/auth";
 
 export async function POST(request: Request) {
   try {
@@ -47,14 +48,17 @@ export async function POST(request: Request) {
       );
     }
 
-    return NextResponse.json({
-      success: true,
-      customer: {
-        id: customer.id,
-        name: customer.name,
-        email: customer.email,
-      },
-    });
+   await createSession(customer.id);
+
+return NextResponse.json({
+  success: true,
+  customer: {
+    id: customer.id,
+    name: customer.name,
+    email: customer.email,
+  },
+});
+
   } catch (error) {
     console.error("LOGIN ERROR:", error);
 

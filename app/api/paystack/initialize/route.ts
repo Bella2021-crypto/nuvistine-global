@@ -5,16 +5,86 @@ export async function POST(request: Request) {
   try {
     const body = await request.json();
 
-   const { email, amount, items } = body;
+   const { email, items } = body;
 
-    if (!email || !amount) {
+    if (!email || !items || !Array.isArray(items) || items.length === 0) {
       return NextResponse.json(
         {
-          error: "Email and amount are required.",
+          error: "Email and items are required.",
         },
         { status: 400 },
       );
     }
+
+    const productIds = items.map((item: { id: number }) => Number(item.id));
+
+const products = await db.orm.public.Product
+  .where((product) => product.id.in(productIds))
+  .where((product) => product.isActive.eq(true))
+  .all();
+
+if (products.length !== productIds.length) {
+  return NextResponse.json(
+    {
+      error: "One or more products are unavailable.",
+    },
+    { status: 400 },
+  );
+}
+
+let calculatedAmount = 0;
+
+for (const item of items) {
+  const product = products.find(
+  (product: (typeof products)[number]) =>
+    product.id === Number(item.id),
+);
+
+  if (!product) {
+    return NextResponse.json(
+      {
+        error: "One or more products could not be found.",
+      },
+      { status: 400 },
+    );
+  }
+
+  const quantity = Number(item.quantity);
+
+  if (!Number.isInteger(quantity) || quantity < 1) {
+    return NextResponse.json(
+      {
+        error: "Invalid product quantity.",
+      },
+      { status: 400 },
+    );
+  }
+
+  if (quantity > product.stock) {
+    return NextResponse.json(
+      {
+        error: `${product.name} does not have enough stock.`,
+      },
+      { status: 400 },
+    );
+  }
+if (product.sizes) {
+  const allowedSizes = product.sizes
+    .split(",")
+    .map((size) => size.trim());
+
+  if (item.size && !allowedSizes.includes(item.size)) {
+    return NextResponse.json(
+      {
+        error: `Invalid size selected for ${product.name}.`,
+      },
+      { status: 400 },
+    );
+  }
+}
+
+  calculatedAmount += product.price * quantity;
+}
 
     const secretKey = process.env.PAYSTACK_SECRET_KEY;
 
@@ -37,7 +107,7 @@ export async function POST(request: Request) {
         },
        body: JSON.stringify({
   email,
-  amount: Math.round(Number(amount) * 100),
+  amount: Math.round(calculatedAmount * 100),
   currency: "NGN",
   callback_url: `${process.env.NEXT_PUBLIC_SITE_URL}/payment/success`,
 }),
@@ -65,22 +135,28 @@ const order = await db.orm.public.Order.create({
   address: body.customer?.address || "",
   city: body.customer?.city || "",
   state: body.customer?.state || "",
-  amount: Math.round(Number(amount)),
+  amount: Math.round(calculatedAmount),
   status: "pending",
   deliveryStatus: "processing",
 });
 
-if (items && Array.isArray(items)) {
-  for (const item of items) {
-    await db.orm.public.OrderItem.create({
-      orderId: order.id,
-      productId: Number(item.id),
-      name: item.name,
-      price: Math.round(Number(item.price)),
-      quantity: Number(item.quantity),
-      size: item.size || null,
-    });
+for (const item of items) {
+  const product = products.find(
+    (product) => product.id === Number(item.id),
+  );
+
+  if (!product) {
+    continue;
   }
+
+  await db.orm.public.OrderItem.create({
+    orderId: order.id,
+    productId: product.id,
+    name: product.name,
+    price: product.price,
+    quantity: Number(item.quantity),
+    size: item.size || null,
+  });
 }
 
 return NextResponse.json({

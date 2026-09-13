@@ -98,8 +98,25 @@ export default function ShopPage() {
           </nav>
 
           <div className="flex items-center gap-4 text-lg">
-            <button aria-label="Wishlist">♡</button>
-            <button aria-label="Account">♙</button>
+            <Link
+  href="/cart"
+  aria-label="Shopping bag"
+  className="transition hover:text-[#A98216]"
+>
+  ♧
+  {cartCount > 0 && (
+    <span className="ml-1 text-xs align-top">
+      ({cartCount})
+    </span>
+  )}
+</Link>
+            <Link
+  href="/account"
+  aria-label="Account"
+  className="transition hover:text-[#A98216]"
+>
+  ♙
+</Link>
             <button aria-label="Shopping bag">♧</button>
           </div>
         </div>

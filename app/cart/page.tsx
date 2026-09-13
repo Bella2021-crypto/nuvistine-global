@@ -55,11 +55,26 @@ export default function CartPage() {
           <div className="flex items-center gap-4 text-lg">
             <button aria-label="Wishlist">♡</button>
 
-            <button aria-label="Account">♙</button>
+            <Link
+  href="/account"
+  aria-label="Account"
+  className="transition hover:text-[#A98216]"
+>
+  ♙
+</Link>
 
-            <Link href="/cart" aria-label="Shopping bag">
-              ♧
-            </Link>
+           <Link
+  href="/cart"
+  aria-label="Shopping bag"
+  className="transition hover:text-[#A98216]"
+>
+  ♧
+  {cart.length > 0 && (
+    <span className="ml-1 text-xs align-top">
+      ({cart.reduce((total, item) => total + item.quantity, 0)})
+    </span>
+  )}
+</Link>
           </div>
         </div>
       </header>
@@ -72,8 +87,16 @@ export default function CartPage() {
           </p>
 
           <h1 className="font-serif text-5xl sm:text-6xl">
-            Shopping Bag
-          </h1>
+  Shopping Bag
+</h1>
+
+<p className="mt-4 text-sm text-[#766D61]">
+  {cart.reduce((total, item) => total + item.quantity, 0)}{" "}
+  {cart.reduce((total, item) => total + item.quantity, 0) === 1
+    ? "item"
+    : "items"}{" "}
+  in your bag
+</p>
         </div>
 
         {/* Cart Contents */}
@@ -107,68 +130,90 @@ export default function CartPage() {
         {cart.map((item) => (
           <div
             key={`${item.id}-${item.size || "default"}`}
-            className="flex gap-5 border-b border-[#201C17]/10 pb-6"
+            className="flex flex-col gap-5 border-b border-[#201C17]/10 pb-6 sm:flex-row"
           >
-            <img
-              src={item.image}
-              alt={item.name}
-              className="h-32 w-24 object-cover"
-            />
+            <div className="h-56 w-full shrink-0 overflow-hidden bg-[#EFE5D0] sm:h-48 sm:w-36">
+  <img
+    src={item.image}
+    alt={item.name}
+    className="h-full w-full object-cover transition duration-500 hover:scale-105"
+  />
+</div>
 
-            <div className="flex flex-1 flex-col justify-between">
+            <div className="flex min-w-0 flex-1 flex-col justify-between">
               <div>
-                <p className="text-xs uppercase tracking-[0.15em] text-[#766D61]">
-                  {item.category}
-                </p>
+  <p className="text-[10px] uppercase tracking-[0.2em] text-[#A98216]">
+    {item.category}
+  </p>
 
-                <h3 className="mt-2 font-serif text-xl">
-                  {item.name}
-                </h3>
+  <h3 className="mt-2 font-serif text-2xl text-[#201C17]">
+    {item.name}
+  </h3>
 
-                {item.size && (
-                  <p className="mt-2 text-sm text-[#766D61]">
-                    Size: {item.size}
-                  </p>
-                )}
+  {item.size && (
+    <p className="mt-3 text-xs uppercase tracking-[0.12em] text-[#766D61]">
+      Size: {item.size}
+    </p>
+  )}
 
-                <p className="mt-2 text-sm">
-                  ₦{item.price.toLocaleString()}
-                </p>
-              </div>
+  <p className="mt-3 text-xs tracking-[0.1em] text-[#766D61]">
+  {item.stock === 0
+    ? "SOLD OUT"
+    : item.stock <= 3
+      ? `ONLY ${item.stock} LEFT`
+      : `${item.stock} AVAILABLE`}
+</p>
 
-              <div className="mt-5 flex items-center gap-5">
-                <div className="flex items-center border border-[#201C17]/20">
-                  <button
-                    onClick={() =>
-                      updateQuantity(
-                        item.id,
-                        item.quantity - 1,
-                        item.size,
-                      )
-                    }
-                    className="px-3 py-2"
-                  >
-                    −
-                  </button>
+  <p className="mt-4 text-sm text-[#201C17]">
+    ₦{item.price.toLocaleString()}
+  </p>
+</div>
 
-                  <span className="px-3 text-sm">
-                    {item.quantity}
-                  </span>
+              <div className="mt-5 flex flex-wrap items-center gap-4">
+                <div className="flex h-full w-11 items-center justify-center text-lg transition hover:bg-[#EFE5D0] disabled:cursor-not-allowed disabled:opacity-30">
+  <button
+ disabled={item.stock <= 0 || item.quantity >= item.stock}
+  onClick={() => {
+    if (item.quantity >= item.stock) {
+      return;
+    }
 
-                  <button
-                    onClick={() =>
-                      updateQuantity(
-                        item.id,
-                        item.quantity + 1,
-                        item.size,
-                      )
-                    }
-                    className="px-3 py-2"
-                  >
-                    +
-                  </button>
-                </div>
+    updateQuantity(
+      item.id,
+      item.quantity + 1,
+      item.size,
+    );
+  }}
+    aria-label={`Decrease quantity of ${item.name}`}
+    className="flex h-full w-11 items-center justify-center text-lg transition hover:bg-[#EFE5D0]"
+  >
+    −
+  </button>
 
+  <span className="flex h-full w-11 items-center justify-center border-x border-[#201C17]/10 text-sm">
+    {item.quantity}
+  </span>
+
+  <button
+    onClick={() =>
+      updateQuantity(
+        item.id,
+        item.quantity + 1,
+        item.size,
+      )
+    }
+    aria-label={`Increase quantity of ${item.name}`}
+    className="flex h-full w-11 items-center justify-center text-lg transition hover:bg-[#EFE5D0]"
+  >
+    +
+  </button>
+</div>
+
+{item.quantity >= item.stock && (
+  <p className="text-[10px] tracking-[0.12em] text-[#A98216]">
+    MAXIMUM AVAILABLE QUANTITY
+  </p>
+)}
                 <button
                   onClick={() =>
                     removeFromCart(item.id, item.size)
@@ -180,15 +225,21 @@ export default function CartPage() {
               </div>
             </div>
 
-            <p className="text-sm font-medium">
-              ₦{(item.price * item.quantity).toLocaleString()}
-            </p>
+            <div className="shrink-0 text-left sm:text-right">
+  <p className="text-[10px] uppercase tracking-[0.15em] text-[#766D61]">
+    Total
+  </p>
+
+  <p className="mt-2 text-sm font-medium text-[#201C17]">
+    ₦{(item.price * item.quantity).toLocaleString()}
+  </p>
+</div>
           </div>
         ))}
       </div>
 
       {/* Summary */}
-      <div className="h-fit border border-[#201C17]/10 p-7">
+      <div className="h-fit border border-[#C9A227]/30 bg-white p-8 lg:sticky lg:top-8">
         <h2 className="font-serif text-2xl">
           Order Summary
         </h2>
@@ -199,24 +250,44 @@ export default function CartPage() {
             <span>₦{cartTotal.toLocaleString()}</span>
           </div>
 
-          <div className="flex justify-between">
-            <span>Delivery</span>
-            <span>
-              {cartTotal >= 100000 ? "FREE" : "Calculated at checkout"}
-            </span>
-          </div>
+          <div className="flex items-start justify-between gap-6">
+  <div>
+    <p>Delivery</p>
 
-          <div className="border-t border-[#201C17]/10 pt-5">
-            <div className="flex justify-between text-base font-medium">
-              <span>Total</span>
-              <span>₦{cartTotal.toLocaleString()}</span>
-            </div>
-          </div>
+    {cartTotal < 100000 && (
+      <p className="mt-1 text-xs leading-5 text-[#766D61]">
+        Free delivery on orders over ₦100,000
+      </p>
+    )}
+  </div>
+
+  <span className="shrink-0">
+    {cartTotal >= 100000 ? "FREE" : "Calculated at checkout"}
+  </span>
+</div>
+
+          <div className="border-t border-[#201C17]/10 pt-6">
+  <div className="flex items-end justify-between">
+    <div>
+      <p className="text-[10px] uppercase tracking-[0.2em] text-[#766D61]">
+        Order Total
+      </p>
+
+      <p className="mt-2 font-serif text-2xl text-[#201C17]">
+        ₦{cartTotal.toLocaleString()}
+      </p>
+    </div>
+
+    <span className="text-[10px] uppercase tracking-widest text-[#A98216]">
+      NGN
+    </span>
+  </div>
+</div>
         </div>
 
-        <Link
+       <Link
   href="/checkout"
-  className="mt-8 block w-full bg-[#C9A227] py-5 text-center text-xs tracking-[0.2em] text-white transition hover:bg-[#A98216]"
+  className="mt-8 block w-full bg-[#201C17] py-5 text-center text-xs tracking-[0.2em] text-white transition hover:bg-[#A98216]"
 >
   PROCEED TO CHECKOUT
 </Link>

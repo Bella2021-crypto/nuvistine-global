@@ -317,6 +317,7 @@ export default function ProductPage({
         category: product.category,
         price: Number(product.price),
         image: product.image,
+        stock: Number(product.stock),
         size: selectedSize || undefined,
       },
       quantity,

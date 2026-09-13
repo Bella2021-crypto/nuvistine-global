@@ -34,19 +34,23 @@ export async function GET(request: Request) {
 
     const data = await response.json();
 
-    if (!response.ok || !data.status) {
-      return NextResponse.json(
-        { error: data.message || "Unable to verify transaction." },
-        { status: response.status || 500 },
-      );
-    }
+    if (
+  !response.ok ||
+  !data.status ||
+  data.data?.status !== "success"
+) {
+  return NextResponse.json(
+    { error: "Payment was not successful." },
+    { status: 400 },
+  );
+}
 
-    const orders = await db.orm.public.Order.all();
-
-const order = orders.find(
-  (item) => item.reference === data.data.reference,
-);
-
+    const order = await db.orm.public.Order
+  .where({
+    reference: data.data.reference,
+  })
+  .first();
+  
     if (!order) {
       return NextResponse.json(
         { error: "Order not found for this transaction." },

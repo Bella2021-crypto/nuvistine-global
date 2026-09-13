@@ -52,3 +52,12 @@ model Product {
 
   @@map("products")
 }
+model Session {
+  id         Int      @id @default(autoincrement())
+  customerId Int
+  tokenHash  String   @unique
+  expiresAt  DateTime
+  createdAt  DateTime @default(now())
+
+  @@map("sessions")
+}

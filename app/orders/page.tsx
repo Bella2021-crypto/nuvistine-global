@@ -9,17 +9,14 @@ export default function OrdersPage() {
 const [loading, setLoading] = useState(true);
 
 useEffect(() => {
-  const customerEmail = sessionStorage.getItem(
-  "nuvistine-customer-email",
-);
+  fetch("/api/orders")
+    .then(async (response) => {
+      if (!response.ok) {
+        window.location.href = "/login";
+        return;
+      }
 
-const ordersUrl = customerEmail
-  ? `/api/orders?email=${encodeURIComponent(customerEmail)}`
-  : "/api/orders";
-
-fetch(ordersUrl)
-    .then((response) => response.json())
-    .then((data) => {
+      const data = await response.json();
       setOrders(data.orders || []);
       setLoading(false);
     })
@@ -27,6 +24,7 @@ fetch(ordersUrl)
       setLoading(false);
     });
 }, []);
+
   return (
     <main className="min-h-screen bg-[#F8F3E7] px-6 py-12">
       <div className="mx-auto max-w-5xl">
