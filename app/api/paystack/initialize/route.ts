@@ -1,9 +1,24 @@
 import { NextResponse } from "next/server";
 import { db } from "@/lib/db";
+import { paymentInitializeRateLimit } from "@/lib/rate-limit";
 
 export async function POST(request: Request) {
   try {
     const body = await request.json();
+
+    const forwardedFor = request.headers.get("x-forwarded-for");
+const ip = forwardedFor?.split(",")[0]?.trim() || "unknown";
+
+const { success } = await paymentInitializeRateLimit.limit(ip);
+
+if (!success) {
+  return NextResponse.json(
+    {
+      error: "Too many payment attempts. Please try again later.",
+    },
+    { status: 429 },
+  );
+}
 
    const { email, items } = body;
 
@@ -16,7 +31,11 @@ export async function POST(request: Request) {
       );
     }
 
-    const productIds = items.map((item: { id: number }) => Number(item.id));
+    const productIds = [
+  ...new Set(
+    items.map((item: { id: number }) => Number(item.id)),
+  ),
+];
 
 const products = await db.orm.public.Product
   .where((product) => product.id.in(productIds))
@@ -50,6 +69,16 @@ for (const item of items) {
   }
 
   const quantity = Number(item.quantity);
+  const totalQuantityForProduct = items
+  .filter(
+    (entry: { id: number }) =>
+      Number(entry.id) === Number(item.id),
+  )
+  .reduce(
+    (total: number, entry: { quantity: number }) =>
+      total + Number(entry.quantity),
+    0,
+  );
 
   if (!Number.isInteger(quantity) || quantity < 1) {
     return NextResponse.json(
@@ -60,7 +89,7 @@ for (const item of items) {
     );
   }
 
-  if (quantity > product.stock) {
+  if (totalQuantityForProduct > product.stock) {
     return NextResponse.json(
       {
         error: `${product.name} does not have enough stock.`,
@@ -73,7 +102,16 @@ if (product.sizes) {
     .split(",")
     .map((size) => size.trim());
 
-  if (item.size && !allowedSizes.includes(item.size)) {
+  if (!item.size) {
+    return NextResponse.json(
+      {
+        error: `Please select a size for ${product.name}.`,
+      },
+      { status: 400 },
+    );
+  }
+
+  if (!allowedSizes.includes(item.size)) {
     return NextResponse.json(
       {
         error: `Invalid size selected for ${product.name}.`,

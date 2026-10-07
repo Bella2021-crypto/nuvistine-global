@@ -7,7 +7,7 @@ export default function AdminOrdersPage() {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    fetch("/api/orders")
+    fetch("/api/admin/orders")
       .then((response) => response.json())
       .then((data) => {
         setOrders(data.orders || []);

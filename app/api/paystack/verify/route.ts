@@ -1,17 +1,36 @@
 import { NextResponse } from "next/server";
 import { db } from "@/lib/db";
+import { paymentVerifyRateLimit } from "@/lib/rate-limit";
 
 export async function GET(request: Request) {
   try {
     const { searchParams } = new URL(request.url);
     const reference = searchParams.get("reference");
 
-    if (!reference) {
-      return NextResponse.json(
-        { error: "Transaction reference is required." },
-        { status: 400 },
-      );
-    }
+    const forwardedFor = request.headers.get("x-forwarded-for");
+const ip = forwardedFor?.split(",")[0]?.trim() || "unknown";
+
+const { success } = await paymentVerifyRateLimit.limit(ip);
+
+if (!success) {
+  return NextResponse.json(
+    {
+      error: "Too many verification attempts. Please try again later.",
+    },
+    { status: 429 },
+  );
+}
+
+if (
+  !reference ||
+  reference.trim().length === 0 ||
+  reference.length > 100
+) {
+  return NextResponse.json(
+    { error: "Transaction reference is required." },
+    { status: 400 },
+  );
+}
 
     const secretKey = process.env.PAYSTACK_SECRET_KEY;
 
@@ -58,6 +77,26 @@ export async function GET(request: Request) {
       );
     }
 
+    if (
+  data.data.reference !== reference ||
+  data.data.reference !== order.reference
+) {
+  return NextResponse.json(
+    { error: "Payment reference does not match the order." },
+    { status: 400 },
+  );
+}
+
+const paystackEmail = data.data.customer?.email?.toLowerCase();
+const orderEmail = order.email.toLowerCase();
+
+if (!paystackEmail || paystackEmail !== orderEmail) {
+  return NextResponse.json(
+    { error: "Payment customer does not match the order." },
+    { status: 400 },
+  );
+}
+
     const paystackAmount = Number(data.data.amount);
     const orderAmount = Number(order.amount) * 100;
 
@@ -68,45 +107,72 @@ export async function GET(request: Request) {
       );
     }
 
-    if (data.data.status === "success" && order.status !== "paid") {
-  const orderItems = await db.orm.public.OrderItem.all();
+if (order.status === "paid") {
+  return NextResponse.json({
+    status: "success",
+    reference: data.data.reference,
+    amount: data.data.amount,
+    currency: data.data.currency,
+    customer: data.data.customer,
+    orderStatus: "paid",
+  });
+}
+
+if (order.status !== "pending") {
+  return NextResponse.json(
+    { error: "This order is not available for payment verification." },
+    { status: 400 },
+  );
+}
+
+    if (data.data.status === "success" && order.status === "pending") {
+  await db.transaction(async (tx) => {
+ 
+  const orderItems = await tx.orm.public.OrderItem.all();
 
   const itemsForOrder = orderItems.filter(
     (item) => item.orderId === order.id,
   );
 
-  for (const item of itemsForOrder) {
-    const products = await db.orm.public.Product.all();
+  const products = await tx.orm.public.Product.all();
 
-    const product = products.find(
-      (product) => product.id === item.productId,
-    );
+for (const item of itemsForOrder) {
+  const product = products.find(
+    (product) => product.id === item.productId,
+  );
 
     if (!product) {
-      continue;
-    }
+  throw new Error(
+    "A product in this order could not be found.",
+  );
+}
 
-    const newStock = Math.max(
-      0,
-      Number(product.stock) - Number(item.quantity),
-    );
+    if (Number(product.stock) < Number(item.quantity)) {
+  throw new Error(
+    `${product.name} does not have enough stock to fulfill this order.`,
+  );
+}
 
-    await db.orm.public.Product
-      .where({
-        id: product.id,
-      })
-      .update({
-        stock: newStock,
-      });
+const newStock =
+  Number(product.stock) - Number(item.quantity);
+
+await tx.orm.public.Product
+  .where({
+    id: product.id,
+  })
+  .update({
+    stock: newStock,
+  });
   }
 
-  await db.orm.public.Order
+  await tx.orm.public.Order
     .where({
       reference: data.data.reference,
     })
     .update({
       status: "paid",
     });
+      });
 }
 
     return NextResponse.json({
@@ -118,14 +184,31 @@ export async function GET(request: Request) {
       orderStatus:
         data.data.status === "success" ? "paid" : order.status,
     });
-  } catch (error) {
-    console.error("PAYSTACK VERIFY ERROR:", error);
+  } 
+ 
+  catch (error) {
+  console.error("PAYSTACK VERIFY ERROR:", error);
 
+  if (
+    error instanceof Error &&
+    (
+      error.message.includes("does not have enough stock") ||
+      error.message.includes("product in this order could not be found")
+    )
+  ) {
     return NextResponse.json(
       {
-        error: "Something went wrong while verifying payment.",
+        error: error.message,
       },
-      { status: 500 },
+      { status: 400 },
     );
   }
+
+  return NextResponse.json(
+    {
+      error: "Something went wrong while verifying payment.",
+    },
+    { status: 500 },
+  );
+}
 }

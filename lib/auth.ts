@@ -84,3 +84,15 @@ export async function destroySession() {
 
   cookieStore.delete(SESSION_COOKIE);
 }
+export function isAdmin(customer: { email: string } | null) {
+  if (!customer) {
+    return false;
+  }
+
+  const adminEmails = (process.env.ADMIN_EMAILS || "")
+    .split(",")
+    .map((email) => email.trim().toLowerCase())
+    .filter(Boolean);
+
+  return adminEmails.includes(customer.email.toLowerCase());
+}

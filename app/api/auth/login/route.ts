@@ -2,9 +2,14 @@ import { NextResponse } from "next/server";
 import bcrypt from "bcryptjs";
 import { db } from "@/lib/db";
 import { createSession } from "@/lib/auth";
+import {
+  loginAccountRateLimit,
+  loginRateLimit,
+} from "@/lib/rate-limit";
 
 export async function POST(request: Request) {
   try {
+    
     const body = await request.json();
 
     const email = String(body.email || "").trim().toLowerCase();
@@ -17,13 +22,38 @@ export async function POST(request: Request) {
         },
         { status: 400 },
       );
+      const forwardedFor = request.headers.get("x-forwarded-for");
+const ip = forwardedFor?.split(",")[0]?.trim() || "unknown";
+
+const { success } = await loginRateLimit.limit(ip);
+
+if (!success) {
+  return NextResponse.json(
+    {
+      error: "Too many login attempts. Please try again later.",
+    },
+    { status: 429 },
+  );
+}
+
+const { success: accountAllowed } =
+  await loginAccountRateLimit.limit(email);
+
+if (!accountAllowed) {
+  return NextResponse.json(
+    {
+      error: "Too many login attempts. Please try again later.",
+    },
+    { status: 429 },
+  );
+}
     }
 
-    const customers = await db.orm.public.Customer.all();
-
-    const customer = customers.find(
-      (item) => item.email === email,
-    );
+    const customer = await db.orm.public.Customer
+  .where({
+    email,
+  })
+  .first();
 
     if (!customer) {
       return NextResponse.json(

@@ -1,8 +1,53 @@
 import { NextResponse } from "next/server";
 import { db } from "@/lib/db";
+import { getCurrentCustomer, isAdmin } from "@/lib/auth";
+
+export async function GET() {
+  try {
+    const customer = await getCurrentCustomer();
+
+    if (!isAdmin(customer)) {
+      return NextResponse.json(
+        { error: "Unauthorized." },
+        { status: 403 },
+      );
+    }
+
+    const orders = await db.orm.public.Order.all();
+    const orderItems = await db.orm.public.OrderItem.all();
+
+    const ordersWithItems = orders.map((order) => ({
+      ...order,
+      items: orderItems.filter(
+        (item) => item.orderId === order.id,
+      ),
+    }));
+
+    return NextResponse.json({
+      orders: ordersWithItems,
+    });
+  } catch (error) {
+    console.error("ADMIN ORDERS GET ERROR:", error);
+
+    return NextResponse.json(
+      {
+        error: "Unable to load orders.",
+      },
+      { status: 500 },
+    );
+  }
+}
 
 export async function PATCH(request: Request) {
   try {
+  const customer = await getCurrentCustomer();
+
+if (!isAdmin(customer)) {
+  return NextResponse.json(
+    { error: "Unauthorized." },
+    { status: 403 },
+  );
+}
     const body = await request.json();
 
     const orderId = Number(body.orderId);
